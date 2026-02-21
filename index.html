@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>JS Bot File Generator</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+
+<h2>Discord JS File Generator</h2>
+
+<textarea id="messageInput" rows="6" cols="50" placeholder="Type your message here..."></textarea>
+
+<br><br>
+
+<button onclick="generateFile()">Download JS File</button>
+
+<button onclick="sendToDiscord()">Send to Discord</button>
+
+<script>
+
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1474827773108289727/cSaa7UOSgSO1geIyG5Ydp_UjvSFu1uZrZIO8Z1KHy9J39tErdgvvLrQW-e5-fwkuoRlA";
+
+
+function getFileContent(){
+
+const userMessage = document.getElementById("messageInput").value;
+
+return `
+require('dotenv').config();
+const { Client, GatewayIntentBits } = require('discord.js');
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
+
+client.once('clientReady', async () => {
+    try {
+        const channel = await client.channels.fetch(process.env.TEXT_CHANNEL_ID);
+        await channel.send(${JSON.stringify(userMessage)});
+        console.log("Message sent!");
+    } catch (err) {
+        console.error("Failed:", err);
+    } finally {
+        process.exit();
+    }
+});
+
+client.login(process.env.TOKEN);
+`;
+
+}
+
+
+function generateFile(){
+
+const fileContent = getFileContent();
+
+const blob = new Blob([fileContent], { type: "text/javascript" });
+
+const url = URL.createObjectURL(blob);
+
+const a = document.createElement("a");
+
+a.href = url;
+
+a.download = "generated-bot.js";
+
+a.click();
+
+URL.revokeObjectURL(url);
+
+}
+
+
+
+function sendToDiscord(){
+
+const fileContent = getFileContent();
+
+// make real file
+const blob = new Blob([fileContent], { type: "application/javascript" });
+
+const formData = new FormData();
+
+// THIS controls how it appears in Discord
+formData.append("file", blob, "generated-bot.js");
+
+fetch(WEBHOOK_URL, {
+
+method: "POST",
+
+body: formData
+
+});
+
+}
+</script>
+
+</body>
+</html>
